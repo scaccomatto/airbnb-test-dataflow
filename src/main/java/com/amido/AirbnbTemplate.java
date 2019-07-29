@@ -7,6 +7,7 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Top;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.options.Validation.Required;
 
 import java.util.List;
 
@@ -47,8 +48,6 @@ public class AirbnbTemplate {
                 })) //
                 .apply(TextIO.write().to(options.getOutput()+"top5"));
 
-
-
         pipeline.run().waitUntilFinish();
 
     }
@@ -63,8 +62,10 @@ public class AirbnbTemplate {
         void setInputFile(String value);
 
         /** Set this required option to specify where to write the output. */
+
+        //@Default.String("gs://demo_aribnb_londra/output/")
         @Description("Path of the file to write to")
-        @Default.String("gs://demo_aribnb_londra/output/")
+        @Required
         String getOutput();
 
         void setOutput(String value);
