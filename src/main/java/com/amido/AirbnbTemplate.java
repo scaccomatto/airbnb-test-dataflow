@@ -12,6 +12,7 @@ import org.apache.beam.sdk.transforms.Top;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
+import java.time.Instant;
 import java.util.List;
 
 public class AirbnbTemplate {
@@ -30,41 +31,17 @@ public class AirbnbTemplate {
         pipeline.apply("ReadLines", TextIO.read().from(options.getInputFile()))
                 .apply("GetPriceById", ParDo.of(new AirbnbPropertyPrice()))
                 .apply("Top_5", Top.of(5, new KV.OrderByValue<>()))
-                .apply("PrintOut", ParDo.of(new DoFn<List<KV<String, Integer>>, String>() {
-                    @ProcessElement
-                    public void processElement(ProcessContext c) {
-                        StringBuffer sb = new StringBuffer();
-                        for (KV<String, Integer> kv : c.element()) {
-                            sb.append(kv.getKey() + "," + kv.getValue() + '\n');
-                        }
-                        c.output(sb.toString());
-                    }
-
-                }))
-                .apply(TextIO.write().to(options.getOutput() + "top5"));
+                .apply("PrintOut", ParDo.of(new PrintList()))
+                .apply(TextIO.write().to(options.getOutput() + "top5_"+Instant.now().getEpochSecond()));
 
         pipeline.run().waitUntilFinish();
 
     }
 
     /*
-    * Matching just the id and the price of the property
-    * TODO: need to add validation and extends matching properties
-    * */
-    private static class AirbnbPropertyPrice extends DoFn<String, KV<String, Integer>> {
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-            String[] airbnbPorperty = c.element().split(",");
-            if (airbnbPorperty.length >= 9 && airbnbPorperty[9].matches("\\d+")) {
-                c.output(KV.of(airbnbPorperty[0], Integer.valueOf(airbnbPorperty[9])));
-            }
-        }
-    }
-
-    /*
-    * Adding some default options to the pipeline
-    * Google Storage is used as default storage
-    * */
+     * Adding some default options to the pipeline
+     * Google Storage is used as default storage
+     * */
     public interface AirbnbTemplateOptions extends PipelineOptions {
 
         @Description("Path of the file to read from")
@@ -84,5 +61,32 @@ public class AirbnbTemplate {
 
         void setOutput(String value);
     }
+
+    /*
+    * Matching just the id and the price of the property
+    * TODO: need to add validation and extends matching properties
+    * */
+    private static class AirbnbPropertyPrice extends DoFn<String, KV<String, Integer>> {
+        @ProcessElement
+        public void processElement(ProcessContext c) {
+            String[] airbnbPorperty = c.element().split(",");
+            if (airbnbPorperty.length >= 9 && airbnbPorperty[9].matches("\\d+")) {
+                c.output(KV.of(airbnbPorperty[0], Integer.valueOf(airbnbPorperty[9])));
+            }
+        }
+    }
+
+    private static class PrintList extends DoFn<List<KV<String, Integer>>, String> {
+        @ProcessElement
+        public void processElement(ProcessContext c) {
+            StringBuffer sb = new StringBuffer();
+            for (KV<String, Integer> kv : c.element()) {
+                sb.append(kv.getKey() + "," + kv.getValue() + '\n');
+            }
+            c.output(sb.toString());
+        }
+    }
+
+
 
 }
