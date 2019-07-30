@@ -47,18 +47,11 @@ public class AirbnbTemplate {
         @Description("Path of the file to read from")
         @Default.String("gs://demo_aribnb_londra/data/*.csv")
         String getInputFile();
-
         void setInputFile(String value);
 
-        /**
-         * Set this required option to specify where to write the output.
-         */
-
-        //@Default.String("gs://demo_aribnb_londra/output/")
         @Description("Path of the file to write to")
         @Default.String("gs://demo_aribnb_londra/output/")
         String getOutput();
-
         void setOutput(String value);
     }
 
